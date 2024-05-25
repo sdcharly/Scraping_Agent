@@ -1,6 +1,6 @@
 import streamlit as st
 from firecrawl import FirecrawlApp
-import openai
+from OPENAI import openai
 from dotenv import load_dotenv
 import os
 import json
