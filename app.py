@@ -34,7 +34,7 @@ def save_raw_data(raw_data, timestamp, output_folder='output'):
 def format_data(data, fields=None):
     load_dotenv()
     # Instantiate the OpenAI client
-    openai.api_key = os.getenv('OPENAI_API_KEY')
+    client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
     # Assign default fields if not provided
     if fields is None:
@@ -50,8 +50,10 @@ def format_data(data, fields=None):
     # Define user message content
     user_message = f"Extract the following information from the provided text:\nPage content:\n\n{data}\n\nInformation to extract: {fields}"
 
-    response = openai.ChatCompletion.create(
+
+    response = client.chat.completions.create(
         model="gpt-4o",
+        response_format={ "type": "json_object" },
         messages=[
             {
                 "role": "system",
@@ -66,10 +68,14 @@ def format_data(data, fields=None):
 
     # Check if the response contains the expected data
     if response and response.choices:
-        formatted_data = response.choices[0].message['content'].strip()
+        formatted_data = response.choices[0].message.content.strip()
+        print(f"Formatted data received from API: {formatted_data}")
+
         try:
             parsed_json = json.loads(formatted_data)
         except json.JSONDecodeError as e:
+            print(f"JSON decoding error: {e}")
+            print(f"Formatted data that caused the error: {formatted_data}")
             raise ValueError("The formatted data could not be decoded into JSON.")
         
         return parsed_json
